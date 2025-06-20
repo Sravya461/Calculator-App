@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Calculator with Functional Buttons</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            transition: background 0.3s;
+        }
+        .light-theme body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        }
+        .calculator {
+            background: linear-gradient(145deg, #2d2d2d, #3a3a3a);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .light-theme .calculator {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .display {
+            background: linear-gradient(145deg, #ffffff, #e0e0e0);
+            padding: 20px;
+            font-size: 2.2em;
+            text-align: right;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            min-height: 60px;
+            word-wrap: break-word;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+        .light-theme .display {
+            background: linear-gradient(145deg, #f0f0f0, #d9d9d9);
+        }
+        .history {
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            padding: 10px;
+            font-size: 0.85em;
+            max-height: 120px;
+            overflow-y: auto;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(5px);
+        }
+        .light-theme .history {
+            background: rgba(255, 255, 255, 0.3);
+            color: #333;
+        }
+        .history div {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        .history div:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .light-theme .history div:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        button {
+            padding: 12px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+        .light-theme button {
+            background: linear-gradient(145deg, #cccccc, #b3b3b3);
+            color: #333;
+        }
+        button:hover {
+            background: linear-gradient(145deg, #5a5a5a, #4a4a4a);
+            transform: translateY(-2px);
+        }
+        .light-theme button:hover {
+            background: linear-gradient(145deg, #d9d9d9, #bfbfbf);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .operator {
+            background: linear-gradient(145deg, #ff6f61, #ff4d3d);
+        }
+        .light-theme .operator {
+            background: linear-gradient(145deg, #ff998c, #ff705f);
+        }
+        .operator:hover {
+            background: linear-gradient(145deg, #ff998c, #ff705f);
+        }
+        .equals {
+            background: linear-gradient(145deg, #28a745, #218838);
+        }
+        .light-theme .equals {
+            background: linear-gradient(145deg, #38c759, #2ca648);
+        }
+        .equals:hover {
+            background: linear-gradient(145deg, #38c759, #2ca648);
+        }
+        .clear, .memory {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+        }
+        .light-theme .clear, .light-theme .memory {
+            background: linear-gradient(145deg, #e4606d, #d63947);
+        }
+        .clear:hover, .memory:hover {
+            background: linear-gradient(145deg, #e4606d, #d63947);
+        }
+        .advanced {
+            background: linear-gradient(145deg, #17a2b8, #138496);
+        }
+        .light-theme .advanced {
+            background: linear-gradient(145deg, #1ac6d9, #1598ad);
+        }
+        .advanced:hover {
+            background: linear-gradient(145deg, #1ac6d9, #1598ad);
+        }
+        .theme-toggle {
+            background: linear-gradient(145deg, #6c757d, #5a6268);
+        }
+        .light-theme .theme-toggle {
+            background: linear-gradient(145deg, #8a9299, #757e85);
+        }
+        .theme-toggle:hover {
+            background: linear-gradient(145deg, #8a9299, #757e85);
+        }
+        @media (max-width: 400px) {
+            .calculator {
+                padding: 15px;
+            }
+            button {
+                padding: 10px;
+                font-size: 0.95em;
+            }
+            .display {
+                font-size: 1.8em;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="history" id="history"></div>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="clear" onclick="clearEntry()">CE</button>
+            <button class="memory" onclick="memoryClear()">MC</button>
+            <button class="memory" onclick="memoryRecall()">MR</button>
+            <button class="memory" onclick="memoryAdd()">M+</button>
+            <button class="memory" onclick="memorySubtract()">M-</button>
+            <button class="advanced" onclick="appendToDisplay('sin(')">sin</button>
+            <button class="advanced" onclick="appendToDisplay('cos(')">cos</button>
+            <button class="advanced" onclick="appendToDisplay('tan(')">tan</button>
+            <button class="operator" onclick="appendToDisplay('/')">/</button>
+            <button class="advanced" onclick="appendToDisplay('asin(')">asin</button>
+            <button class="advanced" onclick="appendToDisplay('acos(')">acos</button>
+            <button class="advanced" onclick="appendToDisplay('atan(')">atan</button>
+            <button class="advanced" onclick="appendToDisplay('sqrt(')">√</button>
+            <button class="operator" onclick="appendToDisplay('*')">×</button>
+            <button class="advanced" onclick="appendToDisplay('sinh(')">sinh</button>
+            <button class="advanced" onclick="appendToDisplay('cosh(')">cosh</button>
+            <button class="advanced" onclick="appendToDisplay('tanh(')">tanh</button>
+            <button class="advanced" onclick="appendToDisplay('^')">^</button>
+            <button class="operator" onclick="appendToDisplay('-')">-</button>
+            <button onclick="appendToDisplay('7')">7</button>
+            <button onclick="appendToDisplay('8')">8</button>
+            <button onclick="appendToDisplay('9')">9</button>
+            <button class="advanced" onclick="appendToDisplay('log(')">log</button>
+            <button class="operator" onclick="appendToDisplay('+')">+</button>
+            <button onclick="appendToDisplay('4')">4</button>
+            <button onclick="appendToDisplay('5')">5</button>
+            <button onclick="appendToDisplay('6')">6</button>
+            <button class="advanced" onclick="appendToDisplay('ln(')">ln</button>
+            <button class="advanced" onclick="appendToDisplay('%')">%</button>
+            <button onclick="appendToDisplay('1')">1</button>
+            <button onclick="appendToDisplay('2')">2</button>
+            <button onclick="appendToDisplay('3')">3</button>
+            <button class="advanced" onclick="appendToDisplay('abs(')">abs</button>
+            <button class="advanced" onclick="appendToDisplay('!')">!</button>
+            <button onclick="appendToDisplay('0')">0</button>
+            <button onclick="appendToDisplay('.')">.</button>
+            <button onclick="backspace()">←</button>
+            <button class="advanced" onclick="appendToDisplay('pi')">π</button>
+            <button class="advanced" onclick="appendToDisplay('e')">e</button>
+            <button onclick="toggleDegRad()">DEG</button>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <button onclick="copyToClipboard()">Copy</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let history = document.getElementById('history');
+        let expression = '';
+        let memory = 0;
+        let historyEntries = [];
+        let isDegree = true;
+
+        function appendToDisplay(value) {
+            // console.log(`Appending: ${value}`);
+            if (display.innerText === '0' && value !== '.' && value !== 'pi' && value !== 'e') {
+                expression = value;
+            } else {
+                expression += value;
+            }
+            display.innerText = expression || '0';
+        }
+
+        function clearDisplay() {
+            // console.log('Clearing display');
+            expression = '';
+            display.innerText = '0';
+        }
+
+        function clearEntry() {
+            // console.log('Clearing entry');
+            expression = '';
+            display.innerText = '0';
+        }
+
+        function backspace() {
+            // console.log('Backspace');
+            expression = expression.slice(0, -1);
+            display.innerText = expression || '0';
+        }
+
+        function memoryClear() {
+            // console.log('Memory clear');
+            memory = 0;
+        }
+
+        function memoryRecall() {
+            // console.log('Memory recall');
+            expression = memory.toString();
+            display.innerText = expression || '0';
+        }
+
+        function memoryAdd() {
+            // console.log('Memory add');
+            try {
+                const result = evaluateExpression(expression);
+                memory += result;
+                // console.log(`Memory updated to: ${memory}`);
+            } catch (error) {
+                display.innerText = error.message;
+                expression = '';
+            }
+        }
+
+        function memorySubtract() {
+            // console.log('Memory subtract');
+            try {
+                const result = evaluateExpression(expression);
+                memory -= result;
+                // console.log(`Memory updated to: ${memory}`);
+            } catch (error) {
+                display.innerText = error.message;
+                expression = '';
+            }
+        }
+
+        function toggleDegRad() {
+            // console.log('Toggling DEG/RAD');
+            isDegree = !isDegree;
+            document.querySelector('button[onclick="toggleDegRad()"]').innerText = isDegree ? 'DEG' : 'RAD';
+        }
+
+        function toggleTheme() {
+            // console.log('Toggling theme');
+            document.body.classList.toggle('light-theme');
+            document.querySelector('button[onclick="toggleTheme()"]').innerText = document.body.classList.contains('light-theme') ? '🌞' : '🌙';
+        }
+
+        function copyToClipboard() {
+            // console.log('Copying to clipboard');
+            navigator.clipboard.writeText(display.innerText)
+                .then(() => alert('Result copied to clipboard!'))
+                .catch(() => alert('Failed to copy to clipboard'));
+        }
+
+        function validateParentheses(expr) {
+            // console.log('Validating parentheses');
+            let count = 0;
+            for (let char of expr) {
+                if (char === '(') count++;
+                if (char === ')') count--;
+                if (count < 0) return false;
+            }
+            return count === 0;
+        }
+
+        function evaluateExpression(expr) {
+            // console.log(`Evaluating: ${expr}`);
+            if (!expr) throw new Error('Empty expression');
+            if (!validateParentheses(expr)) {
+                throw new Error('Unbalanced parentheses');
+            }
+            try {
+                const scope = { pi: Math.PI, e: Math.E };
+                let modifiedExpr = expr;
+                if (isDegree) {
+                    modifiedExpr = expr
+                        .replace(/sin\(/g, 'sin(deg(')
+                        .replace(/cos\(/g, 'cos(deg(')
+                        .replace(/tan\(/g, 'tan(deg(');
+                }
+                const result = math.evaluate(modifiedExpr, scope);
+                if (isNaN(result) || !isFinite(result)) {
+                    throw new Error('Invalid result (e.g., divide by zero)');
+                }
+                return result;
+            } catch (error) {
+                throw new Error(error.message || 'Calculation error');
+            }
+        }
+
+        function calculate() {
+            // console.log('Calculating');
+            try {
+                const result = evaluateExpression(expression);
+                display.innerText = result;
+                historyEntries.push(`${expression} = ${result}`);
+                updateHistory();
+                expression = result.toString();
+            } catch (error) {
+                display.innerText = error.message;
+                expression = '';
+            }
+        }
+
+        function updateHistory() {
+            // console.log('Updating history');
+            history.innerHTML = historyEntries
+                .slice(-10)
+                .map(entry => `<div onclick="recallHistory('${entry.split(' = ')[0].replace(/'/g, "\\'")}')">${entry}</div>`)
+                .join('');
+            history.scrollTop = history.scrollHeight;
+        }
+
+        function recallHistory(expr) {
+            // console.log(`Recalling history: ${expr}`);
+            expression = expr;
+            display.innerText = expression || '0';
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (event) => {
+            event.preventDefault(); // Prevent default browser actions
+            const key = event.key;
+            // console.log(`Key pressed: ${key}`);
+            if (/[0-9]/.test(key)) appendToDisplay(key);
+            else if (key === '+') appendToDisplay('+');
+            else if (key === '-') appendToDisplay('-');
+            else if (key === '*') appendToDisplay('*');
+            else if (key === '/') appendToDisplay('/');
+            else if (key === '.') appendToDisplay('.');
+            else if (key === '(') appendToDisplay('(');
+            else if (key === ')') appendToDisplay(')');
+            else if (key === '^') appendToDisplay('^');
+            else if (key === '%') appendToDisplay('%');
+            else if (key === '!') appendToDisplay('!');
+            else if (key === 'Enter') calculate();
+            else if (key === 'Escape') clearDisplay();
+            else if (key === 'Backspace') backspace();
+            else if (key.toLowerCase() === 'p') appendToDisplay('pi');
+            else if (key.toLowerCase() === 'e') appendToDisplay('e');
+        });
+    </script>
+</body>
+</html>
